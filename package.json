@@ -1,0 +1,17 @@
+{
+  "name": "photos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "es.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@elastic/elasticsearch": "^7.2.0",
+    "debug": "^4.1.1",
+    "elasticsearch": "^16.2.0",
+    "googlephotos": "^0.1.3"
+  }
+}
