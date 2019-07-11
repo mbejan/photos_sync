@@ -3,87 +3,258 @@ const {
     Client: Client6
 } = require('@elastic/elasticsearch')
 
-const es_media_index = {
+const es_gphotos_index = {
     "mappings": {
-        "google_photos": {
+        "google_drive": {
             "properties": {
-                "mediaItem": {
+                "id": {
+                    "type": "keyword"
+                },
+                "name": {
+                    "type": "keyword"
+                },
+                "mimeType": {
+                    "type": "keyword"
+                },
+                "parents": {
+                    "type": "keyword"
+                },
+                "createdTime": {
+                    "type": "date"
+                },
+                "modifiedTime": {
+                    "type": "date"
+                },
+                "originalFilename": {
+                    "type": "keyword"
+                },
+                "fullFileExtension": {
+                    "type": "keyword"
+                },
+                "fileExtension": {
+                    "type": "keyword"
+                },
+                "md5Checksum": {
+                    "type":"keyword"
+                    },
+                "size": {
+                    "type":"long"
+                },
+                "imageMediaMetadata": {
                     "properties": {
-                        "id": {
-                            "type": "keyword"
+                        "width": {
+                            "type": "integer"
                         },
-                        "productUrl": {
-                            "type": "keyword"
+                        "height": {
+                            "type": "integer"
                         },
-                        "baseUrl": {
-                            "type": "keyword"
+                        "rotation": {
+                            "type": "integer"
                         },
-                        "mimeType": {
-                            "type": "keyword"
-                        },
-                        "contributorInfo": {
+                        "location": {
                             "properties": {
-                                "profilePictureBaseUrl": {
-                                    "type": "keyword"
+                                "latitude": {
+                                    "type": "double"
                                 },
-                                "displayName": {
-                                    "type": "keyword"
+                                "longitude": {
+                                    "type": "double"
+                                },
+                                "altitude": {
+                                    "type": "double"
                                 }
                             }
                         },
-                        "description": {
-                            "type": "text"
+                        "time": {
+                            "type": "keyword"
                         },
-                        "mediaMetadata": {
+                        "cameraMake": {
+                            "type": "keyword"
+                        },
+                        "cameraModel": {
+                            "type": "keyword"
+                        },
+                        "exposureTime": {
+                            "type": "float"
+                        },
+                        "aperture": {
+                            "type": "float"
+                        },
+                        "flashUsed": {
+                            "type": "boolean"
+                        },
+                        "focalLength": {
+                            "type": "float"
+                        },
+                        "isoSpeed": {
+                            "type": "integer"
+                        },
+                        "meteringMode": {
+                            "type": "keyword"
+                        },
+                        "sensor": {
+                            "type": "keyword"
+                        },
+                        "exposureMode": {
+                            "type": "keyword"
+                        },
+                        "colorSpace": {
+                            "type": "keyword"
+                        },
+                        "whiteBalance": {
+                            "type": "keyword"
+                        },
+                        "exposureBias": {
+                            "type": "float"
+                        },
+                        "maxApertureValue": {
+                            "type": "float"
+                        },
+                        "subjectDistance": {
+                            "type": "integer"
+                        },
+                        "lens": {
+                            "type": "keyword"
+                        }
+                    }
+                },
+                "videoMediaMetadata": {
+                    "properties": {
+                        "width": {
+                            "type": "integer"
+                        },
+                        "height": {
+                            "type": "integer"
+                        },
+                        "durationMillis": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+const es_gdrive_index = {
+    "mappings": {
+        "google_drive": {
+            "properties": {
+                "id": {
+                    "type": "keyword"
+                },
+                "name": {
+                    "type": "keyword"
+                },
+                "mimeType": {
+                    "type": "keyword"
+                },
+                "parents": {
+                    "type": "keyword"
+                },
+                "createdTime": {
+                    "type": "date"
+                },
+                "modifiedTime": {
+                    "type": "date"
+                },
+                "originalFilename": {
+                    "type": "keyword"
+                },
+                "fullFileExtension": {
+                    "type": "keyword"
+                },
+                "fileExtension": {
+                    "type": "keyword"
+                },
+                "imageMediaMetadata": {
+                    "properties": {
+                        "width": {
+                            "type": "integer"
+                        },
+                        "height": {
+                            "type": "integer"
+                        },
+                        "rotation": {
+                            "type": "integer"
+                        },
+                        "location": {
                             "properties": {
-                                "creationTime": {
-                                    "type": "date"
+                                "latitude": {
+                                    "type": "double"
                                 },
-                                "width": {
-                                    "type": "text"
+                                "longitude": {
+                                    "type": "double"
                                 },
-                                "height": {
-                                    "type": "text"
-                                },
-                                "photo": {
-                                    "properties": {
-                                        "cameraMake": {
-                                            "type": "text"
-                                        },
-                                        "cameraModel": {
-                                            "type": "text"
-                                        },
-                                        "focalLength": {
-                                            "type": "text"
-                                        },
-                                        "apertureFNumber": {
-                                            "type": "integer"
-                                        },
-                                        "isoEquivalent": {
-                                            "type": "integer"
-                                        },
-                                        "exposureTime": {
-                                            "type": "text"
-                                        }
-                                    }
-                                },
-                                "video": {
-                                    "properties": {
-                                        "cameraMake": {
-                                            "type": "text"
-                                        },
-                                        "cameraModel": {
-                                            "type": "text"
-                                        },
-                                        "fps": {
-                                            "type": "integer"
-                                        }
-                                    }
+                                "altitude": {
+                                    "type": "double"
                                 }
                             }
                         },
-                        "filename": {
+                        "time": {
                             "type": "keyword"
+                        },
+                        "cameraMake": {
+                            "type": "keyword"
+                        },
+                        "cameraModel": {
+                            "type": "keyword"
+                        },
+                        "exposureTime": {
+                            "type": "float"
+                        },
+                        "aperture": {
+                            "type": "float"
+                        },
+                        "flashUsed": {
+                            "type": "boolean"
+                        },
+                        "focalLength": {
+                            "type": "float"
+                        },
+                        "isoSpeed": {
+                            "type": "integer"
+                        },
+                        "meteringMode": {
+                            "type": "keyword"
+                        },
+                        "sensor": {
+                            "type": "keyword"
+                        },
+                        "exposureMode": {
+                            "type": "keyword"
+                        },
+                        "colorSpace": {
+                            "type": "keyword"
+                        },
+                        "whiteBalance": {
+                            "type": "keyword"
+                        },
+                        "exposureBias": {
+                            "type": "float"
+                        },
+                        "maxApertureValue": {
+                            "type": "float"
+                        },
+                        "subjectDistance": {
+                            "type": "integer"
+                        },
+                        "lens": {
+                            "type": "keyword"
+                        }
+                    }
+                },
+                "videoMediaMetadata": {
+                    "properties": {
+                        "width": {
+                            "type": "integer"
+                        },
+                        "height": {
+                            "type": "integer"
+                        },
+                        "durationMillis": {
+                            "type": "integer"
                         }
                     }
                 }
@@ -104,43 +275,47 @@ class ElasticManager {
         })
     }
 
-    init() {
-        return new Promise((res, rej) => {
+    initIndex(idx_name, idx_body) {
+        return new Promise((res,rej) => {
             this.client.indices.exists({
-                index: "media"
+                index: [idx_name]
             }).then((exists) => {
                 if (exists.statusCode == 404) {
                     this.client.indices.create({
-                        index: "media",
-                        body: es_media_index
-                    }).then((response) => {
-                        res('index media created');
-                    }).catch((err) => {
+                        index: idx_name,
+                        body: idx_body
+                    }).then((response) => {res();}).catch((err) => {
                         console.error(err);
                         rej(err);
                     });
                 } else {
                     if (exists.statusCode == 200) {
                         res();
-                    } else {
-                        rej('Some error on init()');
                     }
                 }
-
-            }).catch((err) => {
-                console.error('fatal:' + err)
-                process.exit(0);
-            })
-        });
+            });
+        })
     }
 
-    addGooglePhotosMediaItems(mediaItems) {
+    init() {
+        return new Promise((res, rej) => {
+            this.initIndex('google_photos', es_gphotos_index).then( () =>{
+              this.initIndex('google_drive', es_gdrive_index).then( () => {
+                  res();
+              })  
+            }).catch((err) => {
+                rej(err)
+            });
+        }); 
+    }
+
+    addBulkItems(mediaItems, type) {
             var array = [];
             for (var i in mediaItems) {
                 var bulk_l1 = {};
                 bulk_l1.index = {
-                    _index: 'media',
-                    _type: 'google_photos',
+                    _index: type,
+                    _type: type,
                     _id: mediaItems[i].id
                 }
                 array.push(bulk_l1);

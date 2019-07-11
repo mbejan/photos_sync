@@ -1,4 +1,4 @@
-const debug = require('debug')('gphotos.js')
+const debug = require('debug')('googleapimanager.js')
 
 const fs = require('fs');
 const readline = require('readline');
@@ -21,12 +21,13 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
 // time.
 const TOKEN_PATH = 'token.json';
 
-class GPhotos {
+class GoogleApiManager {
 
-    constructor( esc ) {
+    constructor(esc) {
         this.inited = false;
         this.oauth2Client = undefined;
         this.photos = undefined;
+        this.drive = undefined;
         this.esclient = esc;
     }
 
@@ -34,6 +35,11 @@ class GPhotos {
         return new Promise((resolve, reject) => {
             this.initToken().then((res, rej) => {
                 this.photos = new Photos("\"" + res.credentials.access_token + "\"");
+                this.drive = google.drive({
+                    version: 'v3',
+                    auth: this.oAuth2Client
+                });
+
                 resolve();
             }).catch((rej) => {
                 console.error(rej);
@@ -58,7 +64,8 @@ class GPhotos {
                             reject(rej);
                         });
                     } else { //try to refresh the token
-                        this.refreshToken(JSON.parse(content)).then((res) => {;
+                        this.refreshToken(JSON.parse(content)).then((res) => {
+                            ;
                             this.inited = true;
                             this.oAuth2Client = res;
                             resolve(res)
@@ -83,7 +90,7 @@ class GPhotos {
 
                 const oAuth2Client = new google.auth.OAuth2(
                     client_id, client_secret, redirect_uris[0]);
-                
+
                 oAuth2Client.setCredentials(JSON.parse(content));
                 oAuth2Client.refreshAccessToken(function (err, token) {
                     if (err) reject(err)
@@ -103,7 +110,49 @@ class GPhotos {
 
     }
 
-    downloadMeta() {
+    downloadDriveMeta() {
+        debug('downloadDriveMeta');
+
+        var that = this;
+
+        Promise.resolve().then(function resolver() {
+            //if (counter++ < 2)
+                return that.downloadDriveMetaPage().then((mi) => {
+                    if (mi.data.files.length > 0) {
+                        counter += mi.data.files.length
+                        console.log('[counter] ' + counter)
+                        that.esclient.addBulkItems(mi.data.files, 'google_drive');
+                    } else {
+                        throw new Error("done");
+                    }
+                }).then(resolver)
+        }).catch((err) => {
+            console.log('done! ' + err);
+            process.exit(0);
+        });
+
+    }
+    downloadDriveMetaPage() {
+        return new Promise((res, rej) => {
+            debug('downloadDriveMetaPage');
+
+            this.drive.files.list({
+                includeRemoved: false,
+                spaces: 'drive',
+                fields: 'nextPageToken, files(createdTime, fileExtension, fullFileExtension, md5Checksum, size, id, imageMediaMetadata, mimeType, modifiedTime, name, originalFilename, parents, videoMediaMetadata )',
+                q: "mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/vnd.google-apps.photo'"
+            }).then((response) => {
+                this.nextPageToken = response.nextPageToken;
+                res(response);
+            }).catch((err) => {
+                rej(err);
+            });
+
+        })
+    }
+
+
+    downloadPhotosMeta() {
         const filters = new this.photos.Filters();
         const mediaTypeFilter = new this.photos.MediaTypeFilter(this.photos.MediaType.ALL_MEDIA);
         filters.setMediaTypeFilter(mediaTypeFilter);
@@ -111,12 +160,12 @@ class GPhotos {
         var that = this;
 
         Promise.resolve().then(function resolver() {
-            //if (counter++ < 2)
-                return that.downloadMetaPage(filters).then((mi) => {
+            if (counter++ < 2)
+                return that.downloadPhotosMetaPage(filters).then((mi) => {
                     if (mi.mediaItems.length > 0) {
-                        counter+=mi.mediaItems.length
-                        console.log('[counter] '+counter)
-                        that.esclient.addGooglePhotosMediaItems(mi.mediaItems);
+                        counter += mi.mediaItems.length
+                        console.log('[counter] ' + counter)
+                        that.esclient.addBulkItems(mi.mediaItems, 'google_photos');
                     } else {
                         throw new Error("done");
                     }
@@ -129,7 +178,7 @@ class GPhotos {
 
     }
 
-    downloadMetaPage(filters) {
+    downloadPhotosMetaPage(filters) {
         return new Promise((res, rej) => {
             debug('downloadMetaPage');
             this.photos.mediaItems.search(filters, 50, this.nextPageToken).then((rr) => {
@@ -204,4 +253,4 @@ class GPhotos {
 
 }
 
-module.exports = GPhotos;
+module.exports = GoogleApiManager;
