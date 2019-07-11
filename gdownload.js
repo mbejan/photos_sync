@@ -1,11 +1,14 @@
-var GPhotos = require('./gphotos.js');
-var GPhotosES = require('./gphotoses.js');
+const GPhotos = require('./gphotos.js');
+const ElasticManager = require('./elasticmanager.js');
 
 
-var gphotos = new GPhotos();
 
-gphotos.init().then((r, rej) => {
-    gphotos.downloadMeta();
-    //gphotos.refreshToken();
-    }).catch((err) => {})
-;
+var esdb    = new ElasticManager();
+
+esdb.init().then( ()=> {
+    var gphotos = new GPhotos(esdb);
+    gphotos.init().then(() => {
+        gphotos.downloadMeta();
+    })
+
+}).catch((err) => {console.error(err)});

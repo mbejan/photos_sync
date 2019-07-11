@@ -23,10 +23,11 @@ const TOKEN_PATH = 'token.json';
 
 class GPhotos {
 
-    constructor() {
+    constructor( esc ) {
         this.inited = false;
         this.oauth2Client = undefined;
         this.photos = undefined;
+        this.esclient = esc;
     }
 
     init() {
@@ -46,7 +47,7 @@ class GPhotos {
             // Load client secrets from a local file.
             fs.readFile('credentials.json', (err, content) => {
                 if (err) return console.log('Error loading client secret file:', err);
-                fs.readFile(TOKEN_PATH, (err, content) => {
+                fs.readFile(TOKEN_PATH, (err, token) => {
                     if (err) { //no token.json
                         // Authorize a client with credentials, then call the Google Drive API.
                         this.authorize(JSON.parse(content)).then((res) => {
@@ -57,32 +58,44 @@ class GPhotos {
                             reject(rej);
                         });
                     } else { //try to refresh the token
-                        this.refreshToken().then ( () => {
-                            console.log('token refreshed!');
-                        }).catch ( (err) => {
+                        this.refreshToken(JSON.parse(content)).then((res) => {;
+                            this.inited = true;
+                            this.oAuth2Client = res;
+                            resolve(res)
+                        }).catch((err) => {
                             reject(err);
                         });
-                        
+
                     }
                 });
             });
-            });
+        });
     }
 
-    refreshToken() {
+    refreshToken(credentials) {
         return new Promise((resolve, reject) => {
             fs.readFile(TOKEN_PATH, (err, content) => {
-                this.oauth2Client.refreshAccessToken(function(err, token) {
-                    console.log('Token refreshed');
+                const {
+                    client_secret,
+                    client_id,
+                    redirect_uris
+                } = credentials.installed;
+
+                const oAuth2Client = new google.auth.OAuth2(
+                    client_id, client_secret, redirect_uris[0]);
+                
+                oAuth2Client.setCredentials(JSON.parse(content));
+                oAuth2Client.refreshAccessToken(function (err, token) {
                     if (err) reject(err)
                     else {
                         // Store the token to disk for later program executions
                         fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
                             if (err) reject(err);
-                            else
+                            else {
                                 console.log('Token stored to', TOKEN_PATH);
+                                resolve(oAuth2Client);
+                            }
                         });
-                        resolve();
                     }
                 });
             });
@@ -98,17 +111,18 @@ class GPhotos {
         var that = this;
 
         Promise.resolve().then(function resolver() {
-            if (counter++ < 3)
-                 return that.downloadMetaPage(filters).then((mi) => {
+            //if (counter++ < 2)
+                return that.downloadMetaPage(filters).then((mi) => {
                     if (mi.mediaItems.length > 0) {
-                        console.log(mi.mediaItems);
-                    }
-                    else {
-                        debug('got shit')
+                        counter+=mi.mediaItems.length
+                        console.log('[counter] '+counter)
+                        that.esclient.addGooglePhotosMediaItems(mi.mediaItems);
+                    } else {
+                        throw new Error("done");
                     }
                 }).then(resolver)
         }).catch((err) => {
-            console.log('done!'+err);
+            console.log('done! ' + err);
             process.exit(0);
         });
 
@@ -121,7 +135,7 @@ class GPhotos {
             this.photos.mediaItems.search(filters, 50, this.nextPageToken).then((rr) => {
                 this.nextPageToken = rr.nextPageToken;
                 res(rr);
-            }).catch( (err) => {
+            }).catch((err) => {
                 rej(err);
             });
         });
@@ -147,7 +161,7 @@ class GPhotos {
             fs.readFile(TOKEN_PATH, (err, token) => {
                 if (err) this.getAccessToken(res, rej);
                 else {
-                   
+
                     this.oAuth2Client.setCredentials(JSON.parse(token));
                     res(this.oAuth2Client);
                 }
