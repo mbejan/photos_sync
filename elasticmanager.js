@@ -5,128 +5,85 @@ const {
 
 const es_gphotos_index = {
     "mappings": {
-        "google_drive": {
+        "google_photos": {
             "properties": {
-                "id": {
-                    "type": "keyword"
-                },
-                "name": {
-                    "type": "keyword"
-                },
-                "mimeType": {
-                    "type": "keyword"
-                },
-                "parents": {
-                    "type": "keyword"
-                },
-                "createdTime": {
-                    "type": "date"
-                },
-                "modifiedTime": {
-                    "type": "date"
-                },
-                "originalFilename": {
-                    "type": "keyword"
-                },
-                "fullFileExtension": {
-                    "type": "keyword"
-                },
-                "fileExtension": {
-                    "type": "keyword"
-                },
-                "md5Checksum": {
-                    "type":"keyword"
-                    },
-                "size": {
-                    "type":"long"
-                },
-                "imageMediaMetadata": {
+                "mediaItem": {
                     "properties": {
-                        "width": {
-                            "type": "integer"
+                        "id": {
+                            "type": "keyword"
                         },
-                        "height": {
-                            "type": "integer"
+                        "productUrl": {
+                            "type": "keyword"
                         },
-                        "rotation": {
-                            "type": "integer"
+                        "baseUrl": {
+                            "type": "keyword"
                         },
-                        "location": {
+                        "mimeType": {
+                            "type": "keyword"
+                        },
+                        "contributorInfo": {
                             "properties": {
-                                "latitude": {
-                                    "type": "double"
+                                "profilePictureBaseUrl": {
+                                    "type": "keyword"
                                 },
-                                "longitude": {
-                                    "type": "double"
-                                },
-                                "altitude": {
-                                    "type": "double"
+                                "displayName": {
+                                    "type": "keyword"
                                 }
                             }
                         },
-                        "time": {
+                        "description": {
+                            "type": "text"
+                        },
+                        "mediaMetadata": {
+                            "properties": {
+                                "creationTime": {
+                                    "type": "date"
+                                },
+                                "width": {
+                                    "type": "text"
+                                },
+                                "height": {
+                                    "type": "text"
+                                },
+                                "photo": {
+                                    "properties": {
+                                        "cameraMake": {
+                                            "type": "text"
+                                        },
+                                        "cameraModel": {
+                                            "type": "text"
+                                        },
+                                        "focalLength": {
+                                            "type": "text"
+                                        },
+                                        "apertureFNumber": {
+                                            "type": "double"
+                                        },
+                                        "isoEquivalent": {
+                                            "type": "integer"
+                                        },
+                                        "exposureTime": {
+                                            "type": "text"
+                                        }
+                                    }
+                                },
+                                "video": {
+                                    "properties": {
+                                        "cameraMake": {
+                                            "type": "text"
+                                        },
+                                        "cameraModel": {
+                                            "type": "text"
+                                        },
+                                        "fps": {
+                                            "type": "double"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "filename": {
                             "type": "keyword"
-                        },
-                        "cameraMake": {
-                            "type": "keyword"
-                        },
-                        "cameraModel": {
-                            "type": "keyword"
-                        },
-                        "exposureTime": {
-                            "type": "float"
-                        },
-                        "aperture": {
-                            "type": "float"
-                        },
-                        "flashUsed": {
-                            "type": "boolean"
-                        },
-                        "focalLength": {
-                            "type": "float"
-                        },
-                        "isoSpeed": {
-                            "type": "integer"
-                        },
-                        "meteringMode": {
-                            "type": "keyword"
-                        },
-                        "sensor": {
-                            "type": "keyword"
-                        },
-                        "exposureMode": {
-                            "type": "keyword"
-                        },
-                        "colorSpace": {
-                            "type": "keyword"
-                        },
-                        "whiteBalance": {
-                            "type": "keyword"
-                        },
-                        "exposureBias": {
-                            "type": "float"
-                        },
-                        "maxApertureValue": {
-                            "type": "float"
-                        },
-                        "subjectDistance": {
-                            "type": "integer"
-                        },
-                        "lens": {
-                            "type": "keyword"
-                        }
-                    }
-                },
-                "videoMediaMetadata": {
-                    "properties": {
-                        "width": {
-                            "type": "integer"
-                        },
-                        "height": {
-                            "type": "integer"
-                        },
-                        "durationMillis": {
-                            "type": "integer"
                         }
                     }
                 }
@@ -271,7 +228,7 @@ class ElasticManager {
             node: 'http://localhost:9200',
             maxRetries: 5,
             requestTimeout: 60000,
-            sniffOnStart: true
+            sniffOnStart: false
         })
     }
 
@@ -309,13 +266,13 @@ class ElasticManager {
         }); 
     }
 
-    addBulkItems(mediaItems, type) {
+    addBulkItems(mediaItems, estype) {
             var array = [];
             for (var i in mediaItems) {
                 var bulk_l1 = {};
                 bulk_l1.index = {
-                    _index: type,
-                    _type: type,
+                    _index: estype,
+                    _type: estype,
                     _id: mediaItems[i].id
                 }
                 array.push(bulk_l1);
@@ -326,7 +283,7 @@ class ElasticManager {
                         refresh: true,
                         body: array
                     }).then((bulkResponse) => {
-                        if (bulkResponse.errors) {
+                        if (bulkResponse.body.errors) {
                             rej('bulk errors')
                         } else {
                             res();

@@ -139,11 +139,15 @@ class GoogleApiManager {
             this.drive.files.list({
                 includeRemoved: false,
                 spaces: 'drive',
+                pageToken: this.nextPageToken,
                 fields: 'nextPageToken, files(createdTime, fileExtension, fullFileExtension, md5Checksum, size, id, imageMediaMetadata, mimeType, modifiedTime, name, originalFilename, parents, videoMediaMetadata )',
-                q: "mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/vnd.google-apps.photo'"
+                q: "mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/vnd.google-apps.folder'"
             }).then((response) => {
-                this.nextPageToken = response.nextPageToken;
-                res(response);
+                this.nextPageToken = response.data.nextPageToken;
+                if (this.nextPageToken == undefined)
+                    rej('done')
+                else
+                    res(response);
             }).catch((err) => {
                 rej(err);
             });
@@ -160,9 +164,9 @@ class GoogleApiManager {
         var that = this;
 
         Promise.resolve().then(function resolver() {
-            if (counter++ < 2)
+            //if (counter++ < 2)
                 return that.downloadPhotosMetaPage(filters).then((mi) => {
-                    if (mi.mediaItems.length > 0) {
+                    if (mi != undefined && mi.mediaItems != undefined && mi.mediaItems.length > 0) {
                         counter += mi.mediaItems.length
                         console.log('[counter] ' + counter)
                         that.esclient.addBulkItems(mi.mediaItems, 'google_photos');
