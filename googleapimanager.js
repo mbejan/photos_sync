@@ -7,13 +7,13 @@ const {
 } = require('googleapis');
 
 const Photos = require('googlephotos');
-
+var _ = require('underscore');
 /*global*/
 var counter = 0;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
-    'https://www.googleapis.com/auth/photoslibrary'
+                'https://www.googleapis.com/auth/photoslibrary'
 ];
 
 // The file token.json stores the user's access and refresh tokens, and is
@@ -110,6 +110,7 @@ class GoogleApiManager {
 
     }
 
+
     downloadDriveMeta() {
         debug('downloadDriveMeta');
 
@@ -117,15 +118,15 @@ class GoogleApiManager {
 
         Promise.resolve().then(function resolver() {
             //if (counter++ < 2)
-                return that.downloadDriveMetaPage().then((mi) => {
-                    if (mi.data.files.length > 0) {
-                        counter += mi.data.files.length
-                        console.log('[counter] ' + counter)
-                        that.esclient.addBulkItems(mi.data.files, 'google_drive');
-                    } else {
-                        throw new Error("done");
-                    }
-                }).then(resolver)
+            return that.downloadDriveMetaPage().then((mi) => {
+                if (mi.data.files.length > 0) {
+                    counter += mi.data.files.length
+                    console.log('[counter] ' + counter)
+                    that.esclient.addBulkItems(mi.data.files, 'google_drive');
+                } else {
+                    throw new Error("done");
+                }
+            }).then(resolver)
         }).catch((err) => {
             console.log('done! ' + err);
             process.exit(0);
@@ -139,11 +140,15 @@ class GoogleApiManager {
             this.drive.files.list({
                 includeRemoved: false,
                 spaces: 'drive',
+                pageToken: this.nextPageToken,
                 fields: 'nextPageToken, files(createdTime, fileExtension, fullFileExtension, md5Checksum, size, id, imageMediaMetadata, mimeType, modifiedTime, name, originalFilename, parents, videoMediaMetadata )',
-                q: "mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/vnd.google-apps.photo'"
+                q: "mimeType contains 'image/' or mimeType contains 'video/' or mimeType = 'application/vnd.google-apps.folder'"
             }).then((response) => {
-                this.nextPageToken = response.nextPageToken;
-                res(response);
+                this.nextPageToken = response.data.nextPageToken;
+                if (this.nextPageToken == undefined)
+                    rej('done')
+                else
+                    res(response);
             }).catch((err) => {
                 rej(err);
             });
@@ -160,34 +165,102 @@ class GoogleApiManager {
         var that = this;
 
         Promise.resolve().then(function resolver() {
-            if (counter++ < 2)
-                return that.downloadPhotosMetaPage(filters).then((mi) => {
-                    if (mi.mediaItems.length > 0) {
-                        counter += mi.mediaItems.length
-                        console.log('[counter] ' + counter)
-                        that.esclient.addBulkItems(mi.mediaItems, 'google_photos');
-                    } else {
-                        throw new Error("done");
-                    }
-                }).then(resolver)
-        }).catch((err) => {
-            console.log('done! ' + err);
-            process.exit(0);
+            //if (counter++ < 2)
+            return that.downloadPhotosMetaPage(filters).then((mi) => {
+                if (mi.mediaItems.length > 0) {
+                    counter += mi.mediaItems.length
+                    console.log('[counter] ' + counter)
+                    that.esclient.addBulkItems(mi.mediaItems, 'google_photos');
+                } else {
+                    throw new Error("done");
+                }
+            }).then(resolver).catch((err) => {
+                console.log('done! ' + err);
+                process.exit(0);
+            });
         });
-
-
     }
 
     downloadPhotosMetaPage(filters) {
         return new Promise((res, rej) => {
             debug('downloadMetaPage');
-            this.photos.mediaItems.search(filters, 50, this.nextPageToken).then((rr) => {
+            this.photos.mediaItems.search(filters, 5, this.nextPageToken).then((rr) => {
                 this.nextPageToken = rr.nextPageToken;
                 res(rr);
             }).catch((err) => {
                 rej(err);
             });
         });
+    }
+
+    listAlbumPage() {
+        return new Promise((res, rej) => {
+            this.photos.albums.list(10, this.nextPageToken).then((rr) => {
+                this.nextPageToken = rr.nextPageToken;
+
+                res(rr);
+            }).catch((err) => {
+                rej(err);
+            });
+        })
+    }
+
+    listAllAlbums() {
+        this.nextPageToken = undefined;
+        var that = this;
+
+        return new Promise((res_albums, _errors) => {
+            var _albums = [];
+            Promise.resolve().then(function resolver() {
+                return that.listAlbumPage().then((a) => {
+                    if (a.albums != undefined) {
+                        _albums = _albums.concat(a.albums);
+                    }
+                    
+                    if ( a.nextPageToken == undefined ) {
+                        res_albums(_albums);
+                    }
+                    
+                }).then(resolver).catch((err) => {
+                    res_albums(_albums);
+                });
+            });
+        })
+    }
+
+    createAlbum(name) {
+        return new Promise((res, rej) => {
+            debug('createAlbum');
+            this.listAllAlbums().then((list) => {
+
+                var album = _.find(list, (it) => {
+                    return (it.title == name)
+                });
+                
+                if (_.isEmpty(album)) {
+                    this.photos.albums.create(name).then((rr) => {
+                        res(rr);
+                    })
+                } else {
+                    res(album);
+                }
+
+            }).catch((err) => {
+                console.error("fatal error in createAlbum" + err);
+                process.exit(0);
+            });
+
+        });
+    }
+
+    addMediaItems(album_id, ids) {
+        //require('request-promise').debug = 1;
+/*         this.photos.mediaItems.search(album_id).then ( (r) => {
+            console.log(r);
+            process.exit(0);
+        });
+ */        return this.photos.albums.batchRemoveMediaItems(album_id, ["AHTElGLS2Vck_nZSBwOD0kal206-rgaan69D4xK_xiN4MYf3H3Ddd-5SkC-x_WzDLMeTamNAc4Y2EqyZ2S8oXgTyZMetgmtOpw"]);
+
     }
 
     /**

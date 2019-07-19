@@ -8,6 +8,4 @@ esdb.init().then( ()=> {
     gdrive.init().then(() => {
         gdrive.downloadDriveMeta();
     })
-    
-
 }).catch((err) => {console.error(err)});

@@ -1,25 +1,165 @@
 DELETE google_drive
 DELETE google_photos
 
-get google_drive
-get google_photos
+GET google_photos
+POST google_drive/_search
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "match": {"mimeType":"application/vnd.google-apps.folder"}
+                }
+            ]
+            }
+        }
+    }
+
+}
+
+
+
+GET google_photos/_search
+{
+  "query":
+      { "bool":
+         { "must":
+            [ { "match": { "filename.keyword": "DSC_4540.jpg" } }],
+           "filter":
+            [ { "range":
+                 { "mediaMetadata.creationTime":
+                    { "gte": "2000/08/14", "lte": "2022/08/14", "format": "yyyy/MM/dd" } } } ] } } } 
+}
+
+GET google_drive/_search
+{
+        "query": {
+            "bool": {
+                "must_not": [
+                    {
+                        "match": {
+                            "mimeType": "application/vnd.google-apps.folder"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
+
+GET /google_photos,google_drive/_stat
+
+GET google_photos/_search
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "match": {
+                        "filename.keyword": "DSC00971.jpg"
+                    }
+                },
+                {
+                    "match": {
+                        "mediaMetadata.width": 6000
+                    }
+                },
+                {
+                    "match": {
+                        "mediaMetadata.height": 4000
+                    }
+                },
+                {
+                    "match": {
+                        "mediaMetadata.photo.cameraMake.keyword": "SONY"
+                    }
+                },
+                {
+                    "match": {
+                        "mediaMetadata.photo.cameraModel.keyword": "ILCE-6000"
+                    }
+                },
+                {
+                    "match": {
+                        "mediaMetadata.photo.focalLength": 16
+                    }
+                },
+                {
+                    "term": {
+                        "mediaMetadata.photo.apertureFNumber": 4
+                    }
+                },
+                {
+                    "match": {
+                        "mediaMetadata.photo.isoEquivalent": 100
+                    }
+                }
+            ],
+            "filter": [
+                {
+                    "range": {
+                        "mediaMetadata.creationTime": {
+                            "gte": "1900/04/29",
+                            "lte": "2020/04/29",
+                            "format": "yyyy/MM/dd"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
+
+
+
+
+
+
+GET google_drive/_search
+{
+    "sort": [
+        {
+            "name": {
+                "order": "desc"
+            }
+        }
+    ],
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "regexp": {
+                        "name":"2[0-9].*"
+                    }
+                },
+                {
+                    "match": {
+                        "mimeType": "application/vnd.google-apps.folder"
+                    }
+                }
+            ]
+        }
+    }
+}
+
+
 
 PUT google_drive 
 {
     "mappings": {
-        "google_drive": {
+       // "google_drive": {
             "properties": {
                 "id": {
-                    "type": "keyword"
+                    "type": "text"
                 },
                 "name": {
-                    "type": "keyword"
+                    "type": "text"
                 },
                 "mimeType": {
-                    "type": "keyword"
+                    "type": "text"
                 },
                 "parents": {
-                    "type": "keyword"
+                    "type": "text"
                 },
                 "createdTime": {
                     "type": "date"
@@ -28,16 +168,16 @@ PUT google_drive
                     "type": "date"
                 },
                 "originalFilename": {
-                    "type": "keyword"
+                    "type": "text"
                 },
                 "fullFileExtension": {
-                    "type": "keyword"
+                    "type": "text"
                 },
                 "fileExtension": {
-                    "type": "keyword"
+                    "type": "text"
                 },
                 "md5Checksum": {
-                    "type":"keyword"
+                    "type":"text"
                     },
                 "size": {
                     "type":"long"
@@ -67,13 +207,13 @@ PUT google_drive
                             }
                         },
                         "time": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "cameraMake": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "cameraModel": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "exposureTime": {
                             "type": "float"
@@ -85,25 +225,25 @@ PUT google_drive
                             "type": "boolean"
                         },
                         "focalLength": {
-                            "type": "float"
+                            "type": "text"
                         },
                         "isoSpeed": {
                             "type": "integer"
                         },
                         "meteringMode": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "sensor": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "exposureMode": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "colorSpace": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "whiteBalance": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "exposureBias": {
                             "type": "float"
@@ -115,7 +255,7 @@ PUT google_drive
                             "type": "integer"
                         },
                         "lens": {
-                            "type": "keyword"
+                            "type": "text"
                         }
                     }
                 },
@@ -134,36 +274,37 @@ PUT google_drive
                 }
             }
         }
-    }
+    //}
 }
 
 
-PUT google_photos 
+
+PUT google_photos
 {
     "mappings": {
-        "google_photos": {
+        //"google_photos": {
             "properties": {
                 "mediaItem": {
                     "properties": {
                         "id": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "productUrl": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "baseUrl": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "mimeType": {
-                            "type": "keyword"
+                            "type": "text"
                         },
                         "contributorInfo": {
                             "properties": {
                                 "profilePictureBaseUrl": {
-                                    "type": "keyword"
+                                    "type": "text"
                                 },
                                 "displayName": {
-                                    "type": "keyword"
+                                    "type": "text"
                                 }
                             }
                         },
@@ -190,10 +331,12 @@ PUT google_photos
                                             "type": "text"
                                         },
                                         "focalLength": {
-                                            "type": "text"
+                                            "type": "float",
+                                            "store":true
                                         },
                                         "apertureFNumber": {
-                                            "type": "double"
+                                            "type": "float",
+                                            "store":true
                                         },
                                         "isoEquivalent": {
                                             "type": "integer"
@@ -219,25 +362,13 @@ PUT google_photos
                             }
                         },
                         "filename": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "index":"true"
                         }
                     }
                 }
             }
         }
-    }
+    //}
 }
 
-POST media / google_photos / AHTElGI6UDPd0DAQAKkR9rY5kOFq9T2yFAF6HLI4a - H4FJt5XMe36iWt4qXlWBVqZKQ7Y - Tqck - lnZwncTNTrh6k18YPgT_nVg / {
-    "id": "AHTElGI6UDPd0DAQAKkR9rY5kOFq9T2yFAF6HLI4a-H4FJt5XMe36iWt4qXlWBVqZKQ7Y-Tqck-lnZwncTNTrh6k18YPgT_nVg",
-    "productUrl": "https://photos.google.com/lr/photo/AHTElGI6UDPd0DAQAKkR9rY5kOFq9T2yFAF6HLI4a-H4FJt5XMe36iWt4qXlWBVqZKQ7Y-Tqck-lnZwncTNTrh6k18YPgT_nVg",
-    "baseUrl": "https://lh3.googleusercontent.com/lr/AGWb-e54i-88rymZE5mMhsS1YWeKDKk2yo9hbqufnafdaiQYifsN6gl10EpvLJ0RLZKpuZzoljUgLKRO8QRkl13D8l168PC_rCHfFW9H0SooyVjyxy2zn2poPPw60ZAn6Y7SstR2vP8LtM1dX26laoRV-Pcd9_91J9RkPtGkQgbalnFBDcAr18jTGxLrYbzVZKog5hs9Gr62dLvClt89kBHETcgxY4fMIXXaI6lEFhDJPBqQh0LIbovdAp8HedXmWP3EfJ5p8VfCLL9VL4_xq90S09UQTbCjzpp3TSR7dSj_w1XlwfNFRFnNoPpbjfbqgZsLkfHBMEZWPHTjqXZFxyMEJqVG9-fFGkmP1zEaExgKxNTTthqogmCMcrRbw2KM4l_QogEHctiyz_Tb5BxqFgv3eUaU4i24lsbfrdWKRMmDspFTRnV--oDjLX2MEdUD7jwQHpBxspCx_kpF2PWFQDifJl50vdFWeOE-HZaYwXIDkYL0VF-yLvMS8l_r3TcIhFwyPsjl2lo9cI8DLL19a2XLyzFDEb2ld8rdk0BroNX2vyZCzzrT23Zsx5IDocRDbdRbioa8t6KrvxFzyV2xuLtvYQOKfuk69WvR9zSgPanj22hK0gUOG65E7jinssGDYgOvdPE34ZYp_IaeccK5mB1_kSj1lewK0mftOEEfo1HxXg_1d3xg3ixpjSmo1SN2Tkrc22icFrGXlMg5N2lCzrL2_JTiTi-AC6lGPLV1JXpYPZ_-DkTrE_E0VC5XnloGfZXtj1rWbY_0Y41vFwVDRUEnpeH-pAzJN-y4rHd5C3uJF8AQjdKGXQMU79NpprrP0VZ_a32AM7sFOU0XkBABMvFZCJw-Lv9J1RiiLF6JF_nRapUv8dTB1OVWD_jPjgQRU3E_dnRoJgLUBOmO",
-    "mimeType": "image/jpeg",
-    "mediaMetadata": {
-        "creationTime": "2019-06-30T05:51:06Z",
-        "width": "3908",
-        "height": "3036",
-        "photo": {}
-    },
-    "filename": "Bridge0.jpg"
-}
