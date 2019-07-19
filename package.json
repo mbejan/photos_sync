@@ -11,6 +11,11 @@
   "dependencies": {
     "@elastic/elasticsearch": "^7.2.0",
     "debug": "^4.1.1",
+<<<<<<< HEAD
+=======
+    "elasticdump": "^6.3.3",
+    "elasticsearch": "^6.1.0",
+>>>>>>> a7e8ea6bef22be194c7470484ab83f473a6de4b8
     "googleapis": "^40.0.1",
     "googlephotos": "^0.1.3",
     "request-debug": "^0.2.0",

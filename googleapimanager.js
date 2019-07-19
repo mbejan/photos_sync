@@ -166,6 +166,7 @@ class GoogleApiManager {
 
         Promise.resolve().then(function resolver() {
             //if (counter++ < 2)
+<<<<<<< HEAD
             return that.downloadPhotosMetaPage(filters).then((mi) => {
                 if (mi.mediaItems.length > 0) {
                     counter += mi.mediaItems.length
@@ -178,6 +179,20 @@ class GoogleApiManager {
                 console.log('done! ' + err);
                 process.exit(0);
             });
+=======
+                return that.downloadPhotosMetaPage(filters).then((mi) => {
+                    if (mi != undefined && mi.mediaItems != undefined && mi.mediaItems.length > 0) {
+                        counter += mi.mediaItems.length
+                        console.log('[counter] ' + counter)
+                        that.esclient.addBulkItems(mi.mediaItems, 'google_photos');
+                    } else {
+                        throw new Error("done");
+                    }
+                }).then(resolver)
+        }).catch((err) => {
+            console.log('done! ' + err);
+            process.exit(0);
+>>>>>>> a7e8ea6bef22be194c7470484ab83f473a6de4b8
         });
     }
 

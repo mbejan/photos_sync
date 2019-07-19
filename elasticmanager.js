@@ -5,6 +5,7 @@ const {
 
 const es_gphotos_index = {
     "mappings": {
+<<<<<<< HEAD
         //"google_photos": {
         "properties": {
             "mediaItem": {
@@ -88,6 +89,88 @@ const es_gphotos_index = {
                     "filename": {
                         "type": "keyword",
                         "index": "true"
+=======
+        "google_photos": {
+            "properties": {
+                "mediaItem": {
+                    "properties": {
+                        "id": {
+                            "type": "keyword"
+                        },
+                        "productUrl": {
+                            "type": "keyword"
+                        },
+                        "baseUrl": {
+                            "type": "keyword"
+                        },
+                        "mimeType": {
+                            "type": "keyword"
+                        },
+                        "contributorInfo": {
+                            "properties": {
+                                "profilePictureBaseUrl": {
+                                    "type": "keyword"
+                                },
+                                "displayName": {
+                                    "type": "keyword"
+                                }
+                            }
+                        },
+                        "description": {
+                            "type": "text"
+                        },
+                        "mediaMetadata": {
+                            "properties": {
+                                "creationTime": {
+                                    "type": "date"
+                                },
+                                "width": {
+                                    "type": "text"
+                                },
+                                "height": {
+                                    "type": "text"
+                                },
+                                "photo": {
+                                    "properties": {
+                                        "cameraMake": {
+                                            "type": "text"
+                                        },
+                                        "cameraModel": {
+                                            "type": "text"
+                                        },
+                                        "focalLength": {
+                                            "type": "text"
+                                        },
+                                        "apertureFNumber": {
+                                            "type": "double"
+                                        },
+                                        "isoEquivalent": {
+                                            "type": "integer"
+                                        },
+                                        "exposureTime": {
+                                            "type": "text"
+                                        }
+                                    }
+                                },
+                                "video": {
+                                    "properties": {
+                                        "cameraMake": {
+                                            "type": "text"
+                                        },
+                                        "cameraModel": {
+                                            "type": "text"
+                                        },
+                                        "fps": {
+                                            "type": "double"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "filename": {
+                            "type": "keyword"
+                        }
+>>>>>>> a7e8ea6bef22be194c7470484ab83f473a6de4b8
                     }
                 }
             }
@@ -236,7 +319,7 @@ class ElasticManager {
             node: 'http://localhost:9200',
             maxRetries: 5,
             requestTimeout: 60000,
-            sniffOnStart: true
+            sniffOnStart: false
         })
     }
 
@@ -276,6 +359,7 @@ class ElasticManager {
         });
     }
 
+<<<<<<< HEAD
     addBulkItems(mediaItems, type) {
         var array = [];
         for (var i in mediaItems) {
@@ -315,6 +399,33 @@ class ElasticManager {
                 }
                 _scrollSearch(this.client, res.body._scroll_id, hits).then(() => {                    
                     resolve(hits);
+=======
+    addBulkItems(mediaItems, estype) {
+            var array = [];
+            for (var i in mediaItems) {
+                var bulk_l1 = {};
+                bulk_l1.index = {
+                    _index: estype,
+                    _type: estype,
+                    _id: mediaItems[i].id
+                }
+                array.push(bulk_l1);
+                array.push(mediaItems[i])
+            }
+            return new Promise((res, rej) => {
+                    this.client.bulk({
+                        refresh: true,
+                        body: array
+                    }).then((bulkResponse) => {
+                        if (bulkResponse.body.errors) {
+                            rej('bulk errors')
+                        } else {
+                            res();
+                        }
+                    }).catch((err) => {
+                        rej(err);
+                    });
+>>>>>>> a7e8ea6bef22be194c7470484ab83f473a6de4b8
                 });
             }).catch((err) => {
                 console.log('fatal error:' + err)
